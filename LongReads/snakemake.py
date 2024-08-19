@@ -1,7 +1,7 @@
 import os
 import glob 
 
-SAMPLE=glob_wildcards("RawReads/{sample}.fastq.gz")
+SAMPLE,=glob_wildcards("RawReads/{sample}.fastq.gz")
 
 rule all: 
     input: 
