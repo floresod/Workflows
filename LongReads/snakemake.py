@@ -6,7 +6,8 @@ SAMPLE,=glob_wildcards("RawReads/{sample}.fastq.gz")
 rule all: 
     input: 
         expand("RawQC/{sample}_fastqc.{extension}", sample=SAMPLE, extension=["html", "zip"]), 
-        expand("FilteredReads/{sample}.fastq.gz", sample=SAMPLE)
+        expand("FilteredReads/{sample}.fastq.gz", sample=SAMPLE),
+        expand("FilteredQC/{sample}_fastqc.{extension}", sample=SAMPLE, extension=["html","zip"])
 
 
 rule fastqc_rawreads: 
@@ -39,10 +40,18 @@ rule chopper_run:
         """ 
 
 rule fastqc_filtered: 
-    input: 
+    input:
+        FilteredRead="FilteredReads/{sample}.fastq.gz"
     output:
-    params: 
+        zip="FilteredQC/{sample}_fastqc.zip",
+        html="FilteredQC/{sample}_fastqc.html"
+    
+    params:
+        path="FilteredQC"
+    threads:
+        5
+        
     shell: 
-    """
-    fastqc 
-    """
+        """
+        fastqc {input.FilteredRead} --threads {threads} -o {params.path} 
+        """
