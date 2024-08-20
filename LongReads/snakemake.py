@@ -36,4 +36,13 @@ rule chopper_run:
         gunzip -c {input.rawread} | \
         chopper -q 10 -l 100 --tailcrop 10 --threads {params.threads} | \
         gzip > {output.FilteredRead}
-        """
+        """ 
+
+rule fastqc_filtered: 
+    input: 
+    output:
+    params: 
+    shell: 
+    """
+    fastqc 
+    """
