@@ -18,13 +18,14 @@ rule fastqc_rawreads:
     output: 
         zip="RawQC/{sample}_fastqc.zip",
         html="RawQC/{sample}_fastqc.html"
+    log: "logs/fastqc_{sample}.log"
     threads:
         1
     params:
         path="RawQC"
     shell:
         """
-        fastqc {input.rawread} --threads {threads} -o {params.path}
+        fastqc {input.rawread} --threads {threads} -o {params.path} 2>{log}
         """ 
 
 #rule chopper_run: 
@@ -66,14 +67,15 @@ rule kraken2_run:
         threads=5
     output:
         output="Kraken_output/{sample}.txt",
-        report="Kraken_report/{sample}.txt"
+        report="Kraken_report/{sample}.txt" 
+    log: "logs/kraken2_{sample}.log"
     shell:
         """
         kraken2 --db {params.database} --gzip-compressed {input.rawread} \
         --output {output.output} --report {output.report} \
         --threads {params.threads} \
         --confidence 0.01 \
-        --use-names 
+        --use-names  2>{log} 
         """
 rule bracken_run:
     input:
@@ -83,10 +85,11 @@ rule bracken_run:
     params:
         database="../../Databases/k2_standard_08gb_20240605",
         length=100
+    log: "logs/bracken_{sample}.log"
 
     shell:
         """
-        bracken -d {params.database} -i {input.report} -o {output.report} -r {params.length}
+        bracken -d {params.database} -i {input.report} -o {output.report} -r {params.length}  2>{log}
         """
 
 
