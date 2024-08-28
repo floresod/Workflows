@@ -79,7 +79,7 @@ rule kraken2_run:
         """
 rule bracken_run:
     input:
-        report="Kraken_report/{sample}.txt"
+        report=rules.kraken2_run.output.report
     output:
         report="Bracken_report/{sample}.txt"
     params:
