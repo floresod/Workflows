@@ -18,6 +18,8 @@ rule fastqc_rawreads:
     output: 
         zip="RawQC/{sample}_fastqc.zip",
         html="RawQC/{sample}_fastqc.html"
+    conda:
+        "envs/fastqc_env.yaml"
     log: "logs/fastqc_{sample}.log"
     threads:
         1
@@ -68,7 +70,10 @@ rule kraken2_run:
     output:
         output="Kraken_output/{sample}.txt",
         report="Kraken_report/{sample}.txt" 
-    log: "logs/kraken2_{sample}.log"
+    conda:
+        "envs/kraken2_env.yaml"
+    log:
+        "logs/kraken2_{sample}.log"
     shell:
         """
         kraken2 --db {params.database} --gzip-compressed {input.rawread} \
@@ -85,7 +90,10 @@ rule bracken_run:
     params:
         database="../../Databases/k2_standard_08gb_20240605",
         length=100
-    log: "logs/bracken_{sample}.log"
+    conda:
+        "envs/bracken_env.yaml"
+    log:
+        "logs/bracken_{sample}.log"
 
     shell:
         """
