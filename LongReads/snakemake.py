@@ -79,7 +79,7 @@ rule kraken2_run:
         "logs/kraken2_{sample}.log"
     shell:
         """
-        kraken2 --db {params.database} \ 
+        kraken2 --db {params.database} \
                 --gzip-compressed {input.rawread} \
                 --output {output.output} \
                 --report {output.report} \
@@ -110,22 +110,25 @@ rule bracken_run:
 
 rule assembly_flye:
     input: 
-        reads = rules.fastqc_rawreads.input.rawread
+        reads = "RawReads/{sample}.fastq.gz"
     output:
         contigs = "Contigs/flye/{sample}/assembly.fasta" 
     params:
         outdir = "Contigs/flye/{sample}",
         genome_size = "5g"
+    threads:
+        5
     conda:
         "envs/flye_env.yaml"
     log: 
         "logs/flye_{sample}.log"
     shell: 
         """
-        gunzip -c {input.reads} | \
-        flye    --nano-raw - \
+        mkdir -p {params.outdir}
+        flye    --nano-raw {input.reads} \
                 --out-dir {params.outdir} \
                 --genome-size {params.genome_size}\
+                --threads {threads}\
                 --meta  > {log} 2>&1
         """
         
