@@ -9,7 +9,8 @@ rule all:
 #        expand("FilteredReads/{sample}.fastq.gz", sample=SAMPLE),
 #        expand("FilteredQC/{sample}_fastqc.{extension}", sample=SAMPLE, extension=["html","zip"]),
         expand("Kraken_report/{sample}.txt", sample=SAMPLE), 
-        expand("Bracken_report/{sample}.txt", sample=SAMPLE)
+        expand("Bracken_report/{sample}.txt", sample=SAMPLE),
+        expand("Contigs/flye/{sample}/assembly.fasta", sample=SAMPLE)
 
 
 rule fastqc_rawreads: 
@@ -27,7 +28,9 @@ rule fastqc_rawreads:
         path="RawQC"
     shell:
         """
-        fastqc {input.rawread} --threads {threads} -o {params.path} 2>{log}
+        fastqc  {input.rawread} \
+                --threads {threads} \
+                -o {params.path}  > {log} 2>&1 
         """ 
 
 #rule chopper_run: 
@@ -76,11 +79,13 @@ rule kraken2_run:
         "logs/kraken2_{sample}.log"
     shell:
         """
-        kraken2 --db {params.database} --gzip-compressed {input.rawread} \
-        --output {output.output} --report {output.report} \
-        --threads {params.threads} \
-        --confidence 0.01 \
-        --use-names  2>{log} 
+        kraken2 --db {params.database} \ 
+                --gzip-compressed {input.rawread} \
+                --output {output.output} \
+                --report {output.report} \
+                --threads {params.threads} \
+                --confidence 0.01 \
+                --use-names   > {log} 2>&1 
         """
 rule bracken_run:
     input:
@@ -97,7 +102,31 @@ rule bracken_run:
 
     shell:
         """
-        bracken -d {params.database} -i {input.report} -o {output.report} -r {params.length}  2>{log}
+        bracken -d {params.database}\
+                -i {input.report}\
+                -o {output.report}\
+                -r {params.length}  > {log} 2>&1
         """
 
+rule assembly_flye:
+    input: 
+        reads = rules.fastqc_rawreads.input.rawread
+    output:
+        contigs = "Contigs/flye/{sample}/assembly.fasta" 
+    params:
+        outdir = "Contigs/flye/{sample}",
+        genome_size = "5g"
+    conda:
+        "envs/flye_env.yaml"
+    log: 
+        "logs/flye_{sample}.log"
+    shell: 
+        """
+        gunzip -c {input.reads} | \
+        flye    --nano-raw - \
+                --out-dir {params.outdir} \
+                --genome-size {params.genome_size}\
+                --meta  > {log} 2>&1
+        """
+        
 
