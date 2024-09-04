@@ -10,8 +10,9 @@ rule all:
 #        expand("FilteredQC/{sample}_fastqc.{extension}", sample=SAMPLE, extension=["html","zip"]),
         expand("Kraken_report/{sample}.txt", sample=SAMPLE), 
         expand("Bracken_report/{sample}.txt", sample=SAMPLE),
-        expand("Contigs/flye/{sample}/assembly.fasta", sample=SAMPLE)
-
+        expand("Contigs/flye/{sample}/assembly.fasta", sample=SAMPLE), 
+        expand("Kraken_contigs/{sample}.txt", sample=SAMPLE), 
+        expand("Kraken_contigs_out/{sample}.txt", sample=SAMPLE)
 
 rule fastqc_rawreads: 
     input: 
@@ -131,5 +132,29 @@ rule assembly_flye:
                 --threads {threads}\
                 --meta  > {log} 2>&1
         """
+
+rule Kraken2_contigs: 
+    input: 
+        contigs = rules.assembly_flye.output
+    params:
+        database="../../Databases/k2_standard_08gb_20240605",
+        threads=5
+    output:
+        report="Kraken_contigs/{sample}.txt",
+        output="Kraken_contigs_out/{sample}.txt"
+    conda:
+        "envs/kraken2_env.yaml"
+    log:
+        "logs/kraken2_Contigs_{sample}.log"
+    shell:
+        """
+        kraken2 --db {params.database} {input.contigs} \
+                --report {output.report} \
+                --output {output.output} \
+                --threads {params.threads} \
+                --use-mpa-style \
+                --use-names   > {log} 2>&1
+        """
+
         
 
